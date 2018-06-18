@@ -32,22 +32,24 @@ function doSolve (clauses, assignment) {
     let isSat = false;
     while ((!isSat && !finalAssignment)) {
         let clauseOK = true;
+        let ind = 0;
         for (let i=0; i<clauses.length && clauseOK; i++) {
             clauseOK = false;
-            for (let j=0; j<clauses[i].length; j++) {
-                if ((clauses[i][j]>0 && assignment[Math.abs(clauses[i][j])-1] === 1)|| (clauses[i][j]<0 && assignment[Math.abs(clauses[i][j])-1] === 0)) {
+            for (let j = 0; j < clauses[i].length; j++) {
+                if ((clauses[i][j] > 0 && assignment[Math.abs(clauses[i][j]) - 1] === 1) || (clauses[i][j] < 0 && assignment[Math.abs(clauses[i][j]) - 1] === 0)) {
                     clauseOK = true;
+                    ind = i;
                     break;
                 }
             }
+        }
             if (!clauseOK) {
                 assignment = nextAssignment (assignment);
             } else {
-                if (i === clauses.length-1) {
+                if (ind === clauses.length-1) {
                     isSat = true;
                 }
             }
-        }
     }
 
     // RESULTADO DO DOSOLVE()

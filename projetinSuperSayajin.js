@@ -1,87 +1,86 @@
 /*
-  Trabalhin-de-IC por Aline Gouveia
+  Trabalhin-de-IC versão 2.0 por Aline Gouveia
   (alterado de Fernando Castor, November/2017)
 */
 
 exports.solve = function(fileName) {
     let formula = readFormula(fileName);
-    let result = solvedpll(formula.clauses, formula.variables);
+    let result = doSolvedpll(formula.clauses, formula.variables);
     return result;
 }
 
-function solvedpll (clauses, assignment) {
+let assigFinal = [];
+function doSolvedpll (clauses, assignment) {
+    var isSat = false;
+    let hasOne = true;
 
-    let continueOK = true;
-    let isSat = false;
+    function main (clauses, assignment) {
+        let resultMain = {'isSat': false, satisfyingAssignment: null};
 
-    // ATRIBUIR VALORES PARA TORNAR VERDADEIRAS AS CLAUSURAS DE TAM 1
-    let assigAux = assignment.slice();
-    let clausesAux = [];
-    let hasOne = false;
-    for (let i=0; i<clauses.length && continueOK; i++) {
-        if (clauses[i].length == 1) {
-            hasOne = true;
-            if (assigAux[Math.abs(clauses[i])-1] === 0) {
-                assigAux[Math.abs(clauses[i])-1] = 2;
-                clausesAux.push (clauses[i][0]);
-                if (clauses[i][0] < 0) {
-                    assignment[Math.abs(clauses[i])-1] = 0;
-                } else {
-                    assignment[Math.abs(clauses[i])-1] = 1;
+        if (clauses.length === 0) {
+            resultMain.isSat = true;
+            resultMain.satisfyingAssignment = assignment;
+        } else {
+            hasOne = false;
+            for (let i = 0; i < clauses.length && !isSat; i++) {
+                if (clauses[i].length == 1) {
+                    hasOne = true;
+                    if (clauses[i][0] < 0) {
+                        assignment[Math.abs(clauses[i]) - 1] = 0;
+                    } else {
+                        assignment[Math.abs(clauses[i]) - 1] = 1;
+                    }
+                    remove(clauses, clauses[i][0]);
                 }
-            } else {
-                if ((clauses[i] > 0 && assignment[Math.abs(clauses[i]) - 1] !== 1) || (clauses[i] < 0 && assignment[Math.abs(clauses[i]) - 1] !== 0)) {
+            }
+            console.log(assignment)
+            if (!hasOne) {
+                assignment[Math.abs(clauses[0][0]) - 1] = 0;
+                let clausesAux = clauses.slice();
+                remove(clausesAux, -clauses[0][0]);
+                if (main(clausesAux, assignment).isSat) {
+                    isSat = true;
+                    assignment = main(clausesAux, assignment).variables;
+                } else {
+                    assignment[Math.abs(clauses[0][0]) - 1] == 1;
+                    clausesAux = clauses.slice();
+                    remove(clausesAux, clauses[0][0]);
+                    if (main(clausesAux, assignment).isSat) {
+                        isSat = true;
+                        assignment = main(clausesAux, assignment).variables;
+                    }
+                }
+            }
+            main(clauses, assignment);
+        }
+    }
+
+
+    // RETIRAR AS CLAUSURAS DE TAMANHO 01 Q JA TEM VALOR OK E AS Q JA SAO VERDADEIRAS DEVIDO AS VARIAVEIS DETERMINADAS
+    function remove (clauses, variable) {
+        let continueOK = true;
+        for (let i=0; i<clauses.length && continueOK; i++) {
+            if (clauses[i].includes(variable)) {
+                clauses.splice(i, 1);
+                i--;
+                console.log(clauses);
+            }
+            else if (clauses[i].includes(-variable)) {
+                if (clauses[i].length > 1) {
+                    let ind = clauses[i].indexOf(-variable);
+                    clauses[i].splice(ind, 1);
+                } else {
                     continueOK = false;
                 }
+                console.log(clauses);
             }
         }
     }
 
-    // RETIRAR AS CLAUSURAS DE TAMANHO 01 Q JA TEM VALOR OK OU Q JA SAO VERDADEIRAS DEVIDO AS VARIAVEIS DETERMINADAS
-    for (let i=0; i<clausesAux.length; i++){
-        for (let ii=0; ii<clauses.length; ii++){
-            console.log(clauses[ii]);
-            console.log(clausesAux[i]);
-            console.log(clauses[ii].includes(clausesAux[i]));
-            if (clauses[ii].includes(clausesAux[i])) {
-                clauses.splice(ii, 1);
-                ii--;
-            }
-        }
-    }
-
-    // PARA CASO NAO ENCONTRAR UMA CLAUSURA UNITARIA, BACKTRACKING É NOSSA CHOICEE
-    if (!hasOne){
-        for (let i=0; i<assigAux; i++){
-            if (assigAux[i] == 0) {
-                assigAux = 0;
-
-
-            }
-        }
-
-    }
-
-    function testAtributionVariable (assignment, clauses){
-
-    }
-
-    console.log(clauses);
-    //console.log(clausesAux);
-    //console.log(assignment);
-    //console.log(assigAux);
-
-
-
-    // RESULTADO DO SOLVEDPLL()
-    let result = {'isSat': isSat, satisfyingAssignment: null};
-    if (isSat) {
-        result.satisfyingAssignment = assignment;
-    }
+    // RESULTADO DO DOSOLVEDPLL()
+    let result = main(clauses, assignment);
     return result;
 }
-
-
 
 function readFormula (fileName) {
 
@@ -155,4 +154,5 @@ function readFormula (fileName) {
         result.variables = variables;
     }
     return result;
+
 }
